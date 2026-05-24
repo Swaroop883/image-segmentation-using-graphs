@@ -1,132 +1,141 @@
-# Image Segmentation – DSA Project
+# Image Segmentation Using Graphs
 
 ## Overview
-This project implements an Image Segmentation System using concepts from Data Structures and Algorithms (DSA).  
-The segmentation is performed through a mean-similarity–based region merging algorithm supported by the Disjoint Set Union (Union–Find) data structure.
+This project implements a Graph-Based Image Segmentation System using core concepts from Data Structures and Algorithms (DSA). 
 
-Users can upload an image through the frontend, and the backend processes it to generate a clean and meaningful segmented output.
+Traditional pixel-wise comparison often results in noisy, fragmented, or overly sensitive segmentation. To overcome this, our system models the image as a mathematical graph and uses the **Disjoint Set Union (Union-Find)** data structure to perform  region-level merging. 
+
+Users can upload an image through a clean web interface, and the Flask backend processes it to generate meaningful, cleanly segmented outputs.
 
 ---
 
-## Team Members — Group 31
+## Team Members 
 - Manthan Nayak  
 - Sai Swaroop Guntuku  
 - Ankur Kumar 
 
 ---
 
-## Objective
-To segment an image into meaningful regions by grouping similar pixels and avoiding over-segmentation caused by noise, shadows, and natural variations in color.
+## Algorithms & Data Structures Used
 
----
+This project implements two distinct mathematical approaches to region merging, both powered by a highly optimized **Union-Find (DSU)** architecture featuring *Path Compression* and *Union by Rank/Size*.
 
-## Key Idea
-Traditional pixel-wise comparison often results in noisy or fragmented segmentation.  
-To overcome this, the project focuses on region-level merging using:
+### 1. Mean-Similarity Merging
+*   Groups pixels by calculating the running average color (Mean) of an entire region.
+*   Before merging two adjacent regions, it calculates the Euclidean distance between their average colors.
+*   If the distance falls below a dynamic threshold, the DSU merges them.
 
-- Mean color similarity  
-- Spatial neighborhood information  
-- Region-level comparison rather than pixel-level  
-
-The merging process is efficiently handled using the Union–Find (DSU) structure.
+### 2. Felzenszwalb-Huttenlocher (FH) Algorithm
+*   An advanced graph-based approach that adapts to natural textures and gradients.
+*   Instead of averages, it tracks the **Internal Difference** (the maximum edge weight inside a segment).
+*   It merges two regions only if the boundary difference between them is smaller than the internal texture of *both* regions, allowing smooth gradients (like skies) to segment cleanly without harsh banding.
 
 ---
 
 ## Tech Stack
 
-### Backend
+**Backend:**
 - Python  
-- Flask  
-- NumPy  
-- OpenCV  
-- DSU (Union–Find)
+- Flask (Server & API Routing)
+- NumPy (High-performance matrix math)
+- OpenCV (Image reading, scaling, and LAB color space conversion)
 
-### Frontend
-- HTML  
-- CSS  
-- JavaScript  
-
----
-
-## Process
-- Upload image through a simple UI  
-- Region-based segmentation using a DSU merging algorithm  
-- Displays:
-  - Original Image  
-  - Intermediate Region Merging  
-  - Final Segmented Output  
-- Clean and responsive design  
+**Frontend:**
+- HTML5  
+- CSS3  
+- Vanilla JavaScript  
 
 ---
 
 ## How to Run the Project
 
 ### 1. Install Dependencies
+Ensure you have Python installed, then run:
 ```bash
-pip install numpy opencv-python flask
+pip install numpy opencv-python Flask
 ```
-### 2. Start the Flask Backend
+---
+
+### 2. Start the Flask Server
+
+Navigate to the root directory of the project and start the backend:
+
 ```bash
 python app.py
 ```
 
-### 3. Open the Frontend
-Open the main HTML file from the frontend folder in your browser and connect it to the running backend.
+---
 
-### 4. Viewing Output
-After processing:
-- The **Original Image** will appear first.
-- The **Processed/Merged Image** will appear next.
-- Finally, the **Segmented Output** will be displayed with distinct colors.
+## 3. Open the App
 
+Open your web browser and go to:
 
-### Algorithm Summary
+```text
+http://127.0.0.1:5000
+```
 
-1. Extract pixel-level features:
-   - Color information (R, G, B)
-   - Spatial position (x, y)
+(Note: The Flask server automatically routes and serves the frontend HTML, no need to open the file manually).
 
-2. Build edges between neighboring pixels:
-   - 4-connectivity or 8-connectivity
-   - Compute similarity between feature vectors
+---
 
-3. Initialize DSU (Disjoint Set Union):
-   - Each pixel starts as its own set
+## Processing Pipeline
 
-4. Merge regions based on mean similarity:
-   - Compare region means instead of individual pixels
-   - Merge if similarity < threshold
+### Feature Extraction
 
-5. Apply merging threshold to prevent over-merging:
-   - Ensures objects do not collapse into one region
+The image is converted from standard BGR to LAB Color Space to perfectly mimic human visual perception and eliminate shadow interference.
 
-6. Generate final segmentation:
-   - Assign unique labels to each region
-   - Apply random/distinct colors for visualization
+### Graph Construction
+
+The image is mapped into a grid where pixels are nodes. Edges are built using 8-way connectivity, with weights calculated via 3D Euclidean distance.
+
+### Sorting
+
+Edges are sorted by weight ((O(E \log E))) to guarantee that the most similar pixels are evaluated first.
+
+### DSU Merging
+
+The Union-Find structure processes the edges, merging pixels based on either Mean Similarity or FH logic.
+
+### Cleanup
+
+A post-processing pass forces a union on any region that falls below the `min_size` threshold to eliminate noise and speckling.
+
+### Visualization
+
+The backend assigns random distinct colors or average segment colors and returns the generated image to the UI.
 
 ---
 
 ## Folder Structure
-```
+
+```text
 DSA-PROJECT/
-│── app.py
-│── main.py
+│── app.py                 # Flask server and API endpoints
+│── main.py                # Core graph setup and image processing pipeline
+│── segmentation/          # Custom Python package
+│   ├── __init__.py
+│   ├── color_utils.py     # Grayscale & LAB conversions
+│   ├── edge_builder.py    # 8-connectivity graph constructor
+│   └── union_find.py      # DSU architecture & merging algorithms
 │── Frontend/
-│   │── index.html
-│   │── script.js
-│   │── styles.css
-│── uploads/
-│── output/
-│── README.md
+│   ├── index.html
+│   ├── script.js
+│   └── styles.css
+│── uploads/               # Auto-generated (Stores user inputs)
+│── outputs/               # Auto-generated (Stores segmented results)
+└── README.md
 ```
+
 ---
 
-**Acknowledgements**
+## Acknowledgements
 
-This work was developed as part of the DSA Course Project (Group 31).
+This work was developed as part of the DSA Course Project.
 
-**Conclusion**
+---
 
-By integrating DSA concepts such as Union–Find with image processing techniques, this project produces clean, efficient segmentation results. It demonstrates the power of algorithmic thinking in solving real-world problems.
+## Conclusion
+
+By integrating core Data Structures (Union-Find) with advanced mathematical heuristics (FH Algorithm, LAB Color Space), this project produces clean, efficient segmentation results. It demonstrates the immense power of algorithmic thinking in solving complex, real-world computer vision problems.
 
 Thank you for exploring our project!
